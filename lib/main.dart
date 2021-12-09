@@ -62,12 +62,10 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  OverlayEntry? entry1;
-  OverlayEntry? entry2;
-  List<OverlayEntry?>? entries = [];
+  List<OverlayEntry?> entries = [];
 
-  void createNote1(offset) {
-    entry1 = OverlayEntry(
+  OverlayEntry createNote(offset) {
+    final entry = OverlayEntry(
       builder: (context) => Positioned(
         left: offset.dx - 20,
         top: offset.dy - 20,
@@ -82,10 +80,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           },
-          onPanUpdate: (details) {
-            offset += details.delta;
-            entry1!.markNeedsBuild();
-          },
+          // onPanUpdate: (details) {
+          //   offset += details.delta;
+          //   entry!.markNeedsBuild();
+          // },
           child: const CircleAvatar(
             backgroundColor: Colors.red,
             child: Icon(
@@ -96,108 +94,50 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-    // entries!.add(entry1);
-    Overlay.of(context)!.insert(entry1!);
-  }
-
-  void createNote2(offset) {
-    entry2 = OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx - 20,
-        top: offset.dy - 20,
-        child: GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                context: context,
-                builder: (context) => NoteDatail(
-                  onPressed: () {},
-                ),
-              );
-            },
-            onPanUpdate: (details) {
-              offset += details.delta;
-              entry2!.markNeedsBuild();
-            },
-            child: const CircleAvatar(
-              backgroundColor: Colors.red,
-              child: Icon(
-                Icons.note_rounded,
-                color: Colors.white,
-              ),
-            )),
-      ),
-    );
-    // entries!.add(entry2);
-
-    Overlay.of(context)!.insert(entry1!);
-    Overlay.of(context)!.insert(entry2!);
+    entries.add(entry);
+    return entry;
   }
 
   void showOverlay() {
-    Overlay.of(context)!.insert(entry1!);
-    Overlay.of(context)!.insert(entry2!);
+    if (entries.isEmpty) return;
+    for (var entry in entries) {
+      assert(entry != null);
+      Overlay.of(context)!.insert(entry!);
+    }
   }
 
   void hideOverlay({int onPage = 1}) {
-    entry1?.remove();
-    entry2?.remove();
+    if (entries.isEmpty) return;
+    for (var entry in entries) {
+      entry?.remove();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: isEditNotesMode
-              ? const Text('Notes Mode')
-              : const Text(
-                  'PDF View',
-                  textAlign: TextAlign.center,
-                ),
-          leading: isEditNotesMode
-              ? TextButton(
-                  onPressed: () {
-                    hideOverlay();
-                    setState(() {
-                      isEditNotesMode = !isEditNotesMode;
-                    });
-                  },
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )
-              : null,
-          actions: [
-            if (isEditNotesMode) ...[
-              IconButton(
-                icon: const Icon(Icons.add),
+        title: isEditNotesMode
+            ? const Text('Notes Mode')
+            : const Text(
+                'PDF View',
+                textAlign: TextAlign.center,
+              ),
+        leading: isEditNotesMode
+            ? TextButton(
                 onPressed: () {
                   hideOverlay();
-                  showModalBottomSheet(
-                    backgroundColor: Colors.transparent,
-                    isScrollControlled: true,
-                    context: context,
-                    builder: (context) => AddNote(
-                      onPressed: () {
-                        setState(() {
-                          count += 1;
-                        });
-                        if (count == 1) {
-                          createNote1(offset1);
-                          print('Note 1');
-                        } else if (count == 2) {
-                          createNote2(offset2);
-                          print('Note 2');
-                        }
-                      },
-                    ),
-                  );
+                  setState(() {
+                    isEditNotesMode = !isEditNotesMode;
+                  });
                 },
-              ),
-            ],
-          ]),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(color: Colors.white),
+                ),
+              )
+            : null,
+      ),
       body: GestureDetector(
         onLongPressStart: (details) {
           hideOverlay();
@@ -211,15 +151,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   count += 1;
                   isEditNotesMode = true;
                 });
-                if (count == 1) {
-                  createNote1(details.globalPosition);
-                  print('Note 1');
-                } else if (count == 2) {
-                  createNote2(details.globalPosition);
-                  print('Note 2');
-                } else {
-                  print(count);
-                }
+                createNote(details.globalPosition);
+                showOverlay();
+                print(entries.length);
               },
             ),
           );
