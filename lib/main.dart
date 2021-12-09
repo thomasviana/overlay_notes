@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:native_pdf_view/native_pdf_view.dart';
+import 'package:overlay/note_detail.dart';
+
+import 'add_note.dart';
 
 void main() {
   runApp(const MyApp());
@@ -61,17 +64,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   OverlayEntry? entry1;
   OverlayEntry? entry2;
-  List<OverlayEntry?>? entries;
+  List<OverlayEntry?>? entries = [];
 
-  void createNote1() {
+  void createNote1(offset) {
     entry1 = OverlayEntry(
-      maintainState: true,
       builder: (context) => Positioned(
-        left: offset1.dx,
-        top: offset1.dy,
+        left: offset.dx - 20,
+        top: offset.dy - 20,
         child: GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              context: context,
+              builder: (context) => NoteDatail(
+                onPressed: () {},
+              ),
+            );
+          },
           onPanUpdate: (details) {
-            offset1 += details.delta;
+            offset += details.delta;
             entry1!.markNeedsBuild();
           },
           child: const CircleAvatar(
@@ -84,18 +96,28 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+    // entries!.add(entry1);
     Overlay.of(context)!.insert(entry1!);
   }
 
-  void createNote2() {
+  void createNote2(offset) {
     entry2 = OverlayEntry(
-      maintainState: true,
       builder: (context) => Positioned(
-        left: offset2.dx,
-        top: offset2.dy,
+        left: offset.dx - 20,
+        top: offset.dy - 20,
         child: GestureDetector(
+            onTap: () {
+              showModalBottomSheet(
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                context: context,
+                builder: (context) => NoteDatail(
+                  onPressed: () {},
+                ),
+              );
+            },
             onPanUpdate: (details) {
-              offset2 += details.delta;
+              offset += details.delta;
               entry2!.markNeedsBuild();
             },
             child: const CircleAvatar(
@@ -107,6 +129,9 @@ class _MyHomePageState extends State<MyHomePage> {
             )),
       ),
     );
+    // entries!.add(entry2);
+
+    Overlay.of(context)!.insert(entry1!);
     Overlay.of(context)!.insert(entry2!);
   }
 
@@ -125,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
           title: isEditNotesMode
-              ? const Text('')
+              ? const Text('Notes Mode')
               : const Text(
                   'PDF View',
                   textAlign: TextAlign.center,
@@ -149,40 +174,70 @@ class _MyHomePageState extends State<MyHomePage> {
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
-                  setState(() {
-                    count += 1;
-                  });
-                  if (count == 1) {
-                    createNote1();
-                    print('Note 1');
-                  } else if (count == 2) {
-                    createNote2();
-                    print('Note 2');
-                  }
+                  hideOverlay();
+                  showModalBottomSheet(
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    context: context,
+                    builder: (context) => AddNote(
+                      onPressed: () {
+                        setState(() {
+                          count += 1;
+                        });
+                        if (count == 1) {
+                          createNote1(offset1);
+                          print('Note 1');
+                        } else if (count == 2) {
+                          createNote2(offset2);
+                          print('Note 2');
+                        }
+                      },
+                    ),
+                  );
                 },
               ),
-              // IconButton(
-              //   icon: const Icon(Icons.add),
-              //   onPressed: () {
-              //     createNote2();
-              //     print('new note');
-              //   },
-              // ),
             ],
           ]),
-      body: PdfView(
-        documentLoader: const Center(child: CircularProgressIndicator()),
-        pageLoader: const Center(child: CircularProgressIndicator()),
-        controller: _pdfController,
-        pageSnapping: false,
-        scrollDirection: Axis.vertical,
-        onPageChanged: (page) {
-          if (page == 1 && isEditNotesMode) {
-            showOverlay();
-          } else {
-            hideOverlay();
-          }
+      body: GestureDetector(
+        onLongPressStart: (details) {
+          hideOverlay();
+          showModalBottomSheet(
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            context: context,
+            builder: (context) => AddNote(
+              onPressed: () {
+                setState(() {
+                  count += 1;
+                  isEditNotesMode = true;
+                });
+                if (count == 1) {
+                  createNote1(details.globalPosition);
+                  print('Note 1');
+                } else if (count == 2) {
+                  createNote2(details.globalPosition);
+                  print('Note 2');
+                } else {
+                  print(count);
+                }
+              },
+            ),
+          );
         },
+        child: PdfView(
+          documentLoader: const Center(child: CircularProgressIndicator()),
+          pageLoader: const Center(child: CircularProgressIndicator()),
+          controller: _pdfController,
+          pageSnapping: false,
+          scrollDirection: Axis.vertical,
+          onPageChanged: (page) {
+            if (page == 1 && isEditNotesMode) {
+              showOverlay();
+            } else {
+              hideOverlay();
+            }
+          },
+        ),
       ),
       floatingActionButton: isEditNotesMode
           ? null
