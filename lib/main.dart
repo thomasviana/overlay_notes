@@ -36,11 +36,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late PdfController _pdfController;
   late Future<PdfDocument> _pdfDocument;
-  var count = 0;
-
-  Offset offset1 = const Offset(100, 200);
-  Offset offset2 = const Offset(100, 300);
-
   bool isEditNotesMode = false;
 
   @override
@@ -65,7 +60,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<OverlayEntry?> entries = [];
 
   OverlayEntry createNote(offset) {
-    final entry = OverlayEntry(
+    OverlayEntry? entry;
+    entry = OverlayEntry(
       builder: (context) => Positioned(
         left: offset.dx - 20,
         top: offset.dy - 20,
@@ -80,10 +76,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           },
-          // onPanUpdate: (details) {
-          //   offset += details.delta;
-          //   entry!.markNeedsBuild();
-          // },
+          onPanUpdate: (details) {
+            offset += details.delta;
+            entry!.markNeedsBuild();
+          },
           child: const CircleAvatar(
             backgroundColor: Colors.red,
             child: Icon(
@@ -148,7 +144,6 @@ class _MyHomePageState extends State<MyHomePage> {
             builder: (context) => AddNote(
               onPressed: () {
                 setState(() {
-                  count += 1;
                   isEditNotesMode = true;
                 });
                 createNote(details.globalPosition);
