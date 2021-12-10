@@ -16,7 +16,6 @@ class _PdfDocumentViewState extends State<PdfDocumentView> {
   late PdfDocumentViewCubit cubit;
   late PdfController pdfController;
   late Future<PdfDocument> pdfDocument;
-  bool isNotesMode = false;
 
   @override
   void initState() {
@@ -49,7 +48,8 @@ class _PdfDocumentViewState extends State<PdfDocumentView> {
     return Scaffold(
       appBar: _buildAppBar(context, state),
       body: _buildBody(context, state),
-      floatingActionButton: isNotesMode ? null : _showFloatingActionButton(),
+      floatingActionButton:
+          state.isNotesMode ? null : _showFloatingActionButton(),
     );
   }
 
