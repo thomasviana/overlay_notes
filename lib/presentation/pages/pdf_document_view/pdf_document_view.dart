@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:native_pdf_view/native_pdf_view.dart';
-import 'package:overlay/presentation/widgets/add_note.dart';
 
+import 'components/add_note.dart';
 import 'cubit/pdf_document_view_cubit.dart';
 
 class PdfDocumentView extends StatefulWidget {

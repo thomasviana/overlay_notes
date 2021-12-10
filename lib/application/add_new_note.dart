@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:overlay/presentation/widgets/note_detail.dart';
+
+import '../presentation/pages/pdf_document_view/components/note_detail.dart';
 
 @injectable
 class AddNewNote {

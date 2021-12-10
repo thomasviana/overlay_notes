@@ -1,9 +1,8 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:meta/meta.dart';
-import 'package:overlay/application/add_new_note.dart';
+
+import '../../../../application/add_new_note.dart';
 
 part 'pdf_document_view_state.dart';
 
