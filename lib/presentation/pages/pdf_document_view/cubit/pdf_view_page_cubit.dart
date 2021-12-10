@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
+import 'package:overlay/domain/note.dart';
 
 import '../../../../application/add_new_note.dart';
 
@@ -14,22 +15,22 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
   ) : super(PdfViewPageState.initial());
 
   void hideOverlay() {
-    if (state.notes.isEmpty) return;
-    for (var entry in state.notes) {
+    if (state.entries.isEmpty) return;
+    for (var entry in state.entries) {
       entry?.remove();
     }
   }
 
   void showOverlay(BuildContext context) {
-    if (state.notes.isEmpty) return;
-    for (var entry in state.notes) {
+    if (state.entries.isEmpty) return;
+    for (var entry in state.entries) {
       assert(entry != null);
       Overlay.of(context)!.insert(entry!);
     }
   }
 
   void onAddNotePressed(BuildContext context, OverlayEntry noteAsOverlayEntry) {
-    state.notes.add(noteAsOverlayEntry);
+    state.entries.add(noteAsOverlayEntry);
     emit(
       state.copyWith(isNotesMode: true),
     );
@@ -56,5 +57,13 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
     } else if (page == 2) {
       hideOverlay();
     }
+  }
+
+  void onNoteTextChanged(String noteText) {
+    emit(
+      state.copyWith(
+        note: state.note.copyWith(bodyText: noteText),
+      ),
+    );
   }
 }

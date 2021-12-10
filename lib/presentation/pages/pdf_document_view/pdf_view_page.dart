@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:native_pdf_view/native_pdf_view.dart';
 
-import 'components/note_detail.dart';
 import 'cubit/pdf_view_page_cubit.dart';
 
 class PdfViewPage extends StatefulWidget {
@@ -84,7 +83,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
           context: context,
           builder: (context) => _AddNoteFormBottomSheet(
               details: details,
-              onNoteTextChanged: (value) {},
+              onNoteTextChanged: (value) => cubit.onNoteTextChanged(value),
               onAddPressed: () {
                 final noteAsOverlayEntry =
                     _buildNoteAsOverlayEntry(details.globalPosition);
@@ -127,8 +126,10 @@ class _PdfViewPageState extends State<PdfViewPage> {
               backgroundColor: Colors.transparent,
               isScrollControlled: true,
               context: context,
-              builder: (context) => NoteDatail(
-                onPressed: () {},
+              builder: (context) => _NoteDetailBottomSheet(
+                noteText: cubit.state.note.bodyText,
+                onDeletePressed: () {},
+                onMorePressed: () {},
               ),
             );
           },
@@ -181,9 +182,7 @@ class _AddNoteFormBottomSheet extends HookWidget {
               children: [
                 TextButton(
                   child: const Text('Cancel'),
-                  onPressed: () {
-                    _close(context);
-                  },
+                  onPressed: () => _close(context),
                 ),
                 const Text('Add a note'),
                 TextButton(
@@ -207,6 +206,55 @@ class _AddNoteFormBottomSheet extends HookWidget {
                 onNoteTextChanged(value);
               },
             )
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _close(BuildContext context) => Navigator.pop(context);
+}
+
+class _NoteDetailBottomSheet extends HookWidget {
+  final String? noteText;
+  final VoidCallback onMorePressed;
+  final VoidCallback onDeletePressed;
+
+  const _NoteDetailBottomSheet({
+    Key? key,
+    required this.noteText,
+    required this.onMorePressed,
+    required this.onDeletePressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.35,
+      maxChildSize: 0.35,
+      builder: (context, controller) => Container(
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.list),
+                  onPressed: () => _close(context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            Container(
+              child: Text(noteText ?? ''),
+            ),
           ],
         ),
       ),
