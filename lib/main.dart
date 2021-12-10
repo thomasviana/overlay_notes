@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import 'dependency_injection.dart';
-import 'presentation/pages/pdf_document_view/cubit/pdf_document_view_cubit.dart';
-import 'presentation/pages/pdf_document_view/pdf_document_view.dart';
+import 'presentation/pages/pdf_document_view/cubit/pdf_view_page_cubit.dart';
+import 'presentation/pages/pdf_document_view/pdf_view_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +24,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.red,
       ),
       home: BlocProvider(
-        create: (context) => sl<PdfDocumentViewCubit>(),
-        child: const PdfDocumentView(),
+        create: (context) => sl<PdfViewPageCubit>(),
+        child: const PdfViewPage(),
       ),
     );
   }

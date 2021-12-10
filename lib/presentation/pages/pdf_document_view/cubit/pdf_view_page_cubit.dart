@@ -4,34 +4,32 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../application/add_new_note.dart';
 
-part 'pdf_document_view_state.dart';
+part 'pdf_view_page_state.dart';
 
 @injectable
-class PdfDocumentViewCubit extends Cubit<PdfDocumentViewState> {
+class PdfViewPageCubit extends Cubit<PdfViewPageState> {
   AddNewNote addNewNote;
-  PdfDocumentViewCubit(
+  PdfViewPageCubit(
     this.addNewNote,
-  ) : super(PdfDocumentViewState.initial());
+  ) : super(PdfViewPageState.initial());
 
   void hideOverlay() {
-    if (state.entries.isEmpty) return;
-    for (var entry in state.entries) {
+    if (state.notes.isEmpty) return;
+    for (var entry in state.notes) {
       entry?.remove();
     }
   }
 
   void showOverlay(BuildContext context) {
-    if (state.entries.isEmpty) return;
-    for (var entry in state.entries) {
+    if (state.notes.isEmpty) return;
+    for (var entry in state.notes) {
       assert(entry != null);
       Overlay.of(context)!.insert(entry!);
     }
   }
 
-  void onAddNotePressed(BuildContext context, LongPressStartDetails details) {
-    final newNote = addNewNote(details.globalPosition);
-    print(state.entries.length);
-    state.entries.add(newNote);
+  void onAddNotePressed(BuildContext context, OverlayEntry noteAsOverlayEntry) {
+    state.notes.add(noteAsOverlayEntry);
     emit(
       state.copyWith(isNotesMode: true),
     );
