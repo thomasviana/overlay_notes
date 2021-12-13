@@ -82,6 +82,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
           context: context,
           builder: (context) => _AddNoteFormBottomSheet(
             details: details,
+            isAddEnabled: state.isAddEnabled,
             onNoteTextChanged: (value) => cubit.onNoteTextChanged(value),
             onAddPressed: () {
               cubit.onAddNotePressed(context, details);
@@ -156,12 +157,14 @@ class _AddNoteFormBottomSheet extends HookWidget {
   final LongPressStartDetails details;
   final VoidCallback onAddPressed;
   final ValueChanged<String> onNoteTextChanged;
+  final bool isAddEnabled;
 
   const _AddNoteFormBottomSheet({
     Key? key,
     required this.details,
     required this.onAddPressed,
     required this.onNoteTextChanged,
+    required this.isAddEnabled,
   }) : super(key: key);
 
   @override
@@ -188,12 +191,14 @@ class _AddNoteFormBottomSheet extends HookWidget {
                 const Text('Add a note'),
                 TextButton(
                   child: const Text('Add'),
-                  onPressed: () {
-                    _close(context);
-                    Future.delayed(const Duration(milliseconds: 0), () {
-                      onAddPressed();
-                    });
-                  },
+                  onPressed: isAddEnabled
+                      ? () {
+                          _close(context);
+                          Future.delayed(const Duration(milliseconds: 0), () {
+                            onAddPressed();
+                          });
+                        }
+                      : null,
                 ),
               ],
             ),

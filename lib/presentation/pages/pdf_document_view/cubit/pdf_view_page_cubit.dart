@@ -58,7 +58,7 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
   }
 
   void onNotesModePressed(BuildContext context) {
-    emit(state.copyWith(isNotesMode: !state.isNotesMode));
+    emit(state.copyWith(isNotesMode: true));
     showOverlay(context);
   }
 
@@ -71,6 +71,6 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
   }
 
   void onNoteTextChanged(String noteText) {
-    emit(state.copyWith(currentText: noteText));
+    emit(state.copyWith(currentText: noteText, isAddEnabled: true));
   }
 }

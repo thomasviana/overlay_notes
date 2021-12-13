@@ -7,6 +7,7 @@ class PdfViewPageState {
   final int previousPage;
   final int currentPage;
   final bool isNotesMode;
+  final bool isAddEnabled;
 
   PdfViewPageState({
     required this.entries,
@@ -15,16 +16,17 @@ class PdfViewPageState {
     required this.previousPage,
     required this.currentPage,
     required this.isNotesMode,
+    required this.isAddEnabled,
   });
 
   factory PdfViewPageState.initial() => PdfViewPageState(
-        isNotesMode: false,
-        entries: {1: []},
-        notes: [],
-        currentText: '',
-        previousPage: 1,
-        currentPage: 1,
-      );
+      isNotesMode: false,
+      entries: {1: []},
+      notes: [],
+      currentText: '',
+      previousPage: 1,
+      currentPage: 1,
+      isAddEnabled: true);
 
   PdfViewPageState copyWith({
     Map<int, List<OverlayEntry?>>? entries,
@@ -33,6 +35,7 @@ class PdfViewPageState {
     int? previousPage,
     int? currentPage,
     bool? isNotesMode,
+    bool? isAddEnabled,
   }) {
     return PdfViewPageState(
       entries: entries ?? this.entries,
@@ -41,6 +44,7 @@ class PdfViewPageState {
       previousPage: previousPage ?? this.previousPage,
       currentPage: currentPage ?? this.currentPage,
       isNotesMode: isNotesMode ?? this.isNotesMode,
+      isAddEnabled: isAddEnabled ?? this.isAddEnabled,
     );
   }
 }
