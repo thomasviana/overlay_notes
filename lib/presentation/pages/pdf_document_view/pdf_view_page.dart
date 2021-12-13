@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:native_pdf_view/native_pdf_view.dart';
 
+import '../../../domain/note.dart';
 import 'cubit/pdf_view_page_cubit.dart';
 
 class PdfViewPage extends StatefulWidget {
@@ -23,9 +24,6 @@ class _PdfViewPageState extends State<PdfViewPage> {
     pdfController = PdfController(
       document: pdfDocument,
     );
-    // WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-    //   showOverlay();
-    // });
     super.initState();
     cubit = context.read<PdfViewPageCubit>();
   }
@@ -33,7 +31,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
   @override
   void dispose() {
     pdfController.dispose();
-    cubit.hideOverlay();
+    cubit.hideCurrentOverlay();
     super.dispose();
   }
 
@@ -76,19 +74,21 @@ class _PdfViewPageState extends State<PdfViewPage> {
   Widget _buildBody(BuildContext context, PdfViewPageState state) {
     return GestureDetector(
       onLongPressStart: (details) {
-        cubit.hideOverlay();
+        if (!state.isNotesMode) return;
+        cubit.hideCurrentOverlay();
         showModalBottomSheet(
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           context: context,
           builder: (context) => _AddNoteFormBottomSheet(
-              details: details,
-              onNoteTextChanged: (value) => cubit.onNoteTextChanged(value),
-              onAddPressed: () {
-                final noteAsOverlayEntry =
-                    _buildNoteAsOverlayEntry(details.globalPosition);
-                cubit.onAddNotePressed(context, noteAsOverlayEntry);
-              }),
+            details: details,
+            onNoteTextChanged: (value) => cubit.onNoteTextChanged(value),
+            onAddPressed: () {
+              cubit.onAddNotePressed(context, details);
+              final overlayNote = _buildNoteAsOverlayEntry(state.notes.last);
+              cubit.addOverlayEntry(context, overlayNote);
+            },
+          ),
         );
       },
       child: PdfView(
@@ -108,18 +108,19 @@ class _PdfViewPageState extends State<PdfViewPage> {
         Icons.note_rounded,
         color: Colors.white,
       ),
-      onPressed: () {
-        cubit.onNotesModePressed(context);
-      },
+      onPressed: () => cubit.onNotesModePressed(context),
     );
   }
 
-  OverlayEntry _buildNoteAsOverlayEntry(Offset offset) {
+  OverlayEntry _buildNoteAsOverlayEntry(Note newNote) {
+    final notesList = cubit.state.notes;
+    final noteIndex = notesList.indexWhere((note) => note.id == newNote.id);
+
     OverlayEntry? entry;
     entry = OverlayEntry(
       builder: (context) => Positioned(
-        left: offset.dx - 20,
-        top: offset.dy - 20,
+        left: newNote.offset.dx - 20,
+        top: newNote.offset.dy - 20,
         child: GestureDetector(
           onTap: () {
             showModalBottomSheet(
@@ -127,14 +128,14 @@ class _PdfViewPageState extends State<PdfViewPage> {
               isScrollControlled: true,
               context: context,
               builder: (context) => _NoteDetailBottomSheet(
-                noteText: cubit.state.note.bodyText,
+                noteText: notesList[noteIndex].bodyText,
                 onDeletePressed: () {},
                 onMorePressed: () {},
               ),
             );
           },
           onPanUpdate: (details) {
-            offset += details.delta;
+            newNote.offset += details.delta;
             entry!.markNeedsBuild();
           },
           child: const CircleAvatar(
@@ -202,9 +203,7 @@ class _AddNoteFormBottomSheet extends HookWidget {
               decoration: const InputDecoration(
                 labelText: 'Note',
               ),
-              onChanged: (value) {
-                onNoteTextChanged(value);
-              },
+              onChanged: (value) => onNoteTextChanged(value),
             )
           ],
         ),
@@ -238,6 +237,7 @@ class _NoteDetailBottomSheet extends HookWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,8 +252,19 @@ class _NoteDetailBottomSheet extends HookWidget {
                 ),
               ],
             ),
-            Container(
-              child: Text(noteText ?? ''),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(noteText ?? ''),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'just now',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

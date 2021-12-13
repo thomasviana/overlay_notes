@@ -20,7 +20,6 @@ _i1.GetIt $initGetIt(_i1.GetIt get,
   final gh = _i2.GetItHelper(get, environment, environmentFilter);
   gh.factory<_i3.AddNewNote>(() => _i3.AddNewNote());
   gh.lazySingleton<_i4.NoteRepository>(() => _i5.NoteRepositoryImpl());
-  gh.factory<_i6.PdfViewPageCubit>(
-      () => _i6.PdfViewPageCubit(get<_i3.AddNewNote>()));
+  gh.factory<_i6.PdfViewPageCubit>(() => _i6.PdfViewPageCubit());
   return get;
 }
