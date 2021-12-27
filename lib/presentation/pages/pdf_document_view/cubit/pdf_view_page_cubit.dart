@@ -52,14 +52,35 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
     emit(state.copyWith(isNotesMode: true));
   }
 
+  void onUpdateNotesPosition(double newDx) {
+    for (var note in state.notes) {
+      note.offset = Offset(note.offset.dx, newDx);
+    }
+  }
+
   void onDonePressed() {
     hideCurrentOverlay();
     emit(state.copyWith(isNotesMode: false));
   }
 
   void onNotesModePressed(BuildContext context) {
-    emit(state.copyWith(isNotesMode: true));
+    emit(state.copyWith(isNotesMode: !state.isNotesMode));
     showOverlay(context);
+  }
+
+  void onNoteSelected(Note selectedNote) {
+    final notesList = state.notes;
+    final noteIndex =
+        notesList.indexWhere((note) => note.id == selectedNote.id);
+    emit(
+      state.copyWith(
+          isSelectedNote: !state.isSelectedNote,
+          currentText: notesList[noteIndex].bodyText),
+    );
+  }
+
+  void onDismissNoteDetail() {
+    emit(state.copyWith(isSelectedNote: false));
   }
 
   void onPageChanged(BuildContext context, int page) {
@@ -71,6 +92,6 @@ class PdfViewPageCubit extends Cubit<PdfViewPageState> {
   }
 
   void onNoteTextChanged(String noteText) {
-    emit(state.copyWith(currentText: noteText, isAddEnabled: true));
+    emit(state.copyWith(currentText: noteText));
   }
 }
