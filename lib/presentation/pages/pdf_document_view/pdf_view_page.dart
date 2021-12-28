@@ -21,13 +21,13 @@ class _PdfViewPageState extends State<PdfViewPage>
   late Future<PdfDocument> pdfDocument;
 
   late Animation<double> animation;
+  late Animation<double> scaleAnimation;
   late AnimationController controller;
 
   double noteDetailContainerHeight = 300;
   double noteDisplacement = 0;
   double animatedRadius = 20;
   double animatedSize = 20;
-  double scaleOperator = -0.4;
 
   @override
   void initState() {
@@ -40,13 +40,15 @@ class _PdfViewPageState extends State<PdfViewPage>
       ..addListener(() {
         setState(() {
           noteDisplacement = animation.value * noteDetailContainerHeight;
-          animatedRadius += animation.value * scaleOperator;
-          animatedSize += animation.value * scaleOperator;
         });
-      })
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) scaleOperator *= -1;
-        if (status == AnimationStatus.dismissed) scaleOperator *= -1;
+      });
+
+    scaleAnimation = Tween<double>(begin: 1, end: 0.6).animate(controller)
+      ..addListener(() {
+        setState(() {
+          animatedRadius = scaleAnimation.value * 20;
+          animatedSize = scaleAnimation.value * 20;
+        });
       });
 
     super.initState();
@@ -93,7 +95,7 @@ class _PdfViewPageState extends State<PdfViewPage>
       leading: state.isNotesMode
           ? TextButton(
               onPressed: () {
-                cubit.onDonePressed();
+                cubit.onDonePressed(context);
                 if (state.isNotesMode) {
                   controller.animateBack(0);
                 }
@@ -110,7 +112,7 @@ class _PdfViewPageState extends State<PdfViewPage>
   Widget _buildBody(BuildContext context, PdfViewPageState state) {
     return GestureDetector(
       onLongPressStart: (details) {
-        if (!state.isNotesMode) return;
+        if (!state.isNotesMode || state.isSelectedNote) return;
         cubit.hideCurrentOverlay();
         showModalBottomSheet(
           backgroundColor: Colors.transparent,
@@ -121,9 +123,11 @@ class _PdfViewPageState extends State<PdfViewPage>
             onNoteTextChanged: (value) => cubit.onNoteTextChanged(value),
             onAddPressed: () {
               cubit.onAddNotePressed(context, details);
-              final overlayNote = _buildNoteAsOverlayEntry(state.notes.last);
+              final overlayNote = _buildNoteAsOverlayEntry(
+                  state.notes[state.currentPage]!.last);
               cubit.addOverlayEntry(context, overlayNote);
             },
+            onCancelPressed: () => cubit.onCancelPressed(context),
           ),
         );
       },
@@ -137,9 +141,15 @@ class _PdfViewPageState extends State<PdfViewPage>
             ),
           ),
           _NoteDetailContainer(
+            isForwardEnable: state.isForwardEnable,
+            isBackwardEnable: state.isBackwardEnable,
             noteDisplacement: noteDisplacement,
             onEditPressed: () {},
             onDeletePressed: () {},
+            onNavigateBack: () => cubit.onNavigateBack(context, pdfController),
+            onNavigateForward: () {
+              cubit.onNavigateForward(context, pdfController);
+            },
             noteText: state.currentText,
           )
         ],
@@ -170,7 +180,7 @@ class _PdfViewPageState extends State<PdfViewPage>
         top: newNote.offset.dy - 20,
         child: GestureDetector(
           onTap: () {
-            cubit.onNoteSelected(newNote);
+            cubit.onNoteSelected(context, newNote);
             controller.forward();
           },
           onPanUpdate: (details) {
@@ -180,21 +190,21 @@ class _PdfViewPageState extends State<PdfViewPage>
           child: AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
-              print('Total Height: ${size.height}');
-              print('appBar: $appbarSize');
-              print('body: $bodyHeight');
-              print('Offset dx: ${newNote.offset.dx}');
-              print('Offset dy: ${newNote.offset.dy}');
+              // print('Total Height: ${size.height}');
+              // print('appBar: $appbarSize');
+              // print('body: $bodyHeight');
+              // print('Offset dx: ${newNote.offset.dx}');
+              // print('Offset dy: ${newNote.offset.dy}');
 
               //! dx
               final dh1 = size.width / 0.77;
               final vgs = (bodyHeight - dh1) / 2;
               final dy = newNote.offset.dy - vgs - appbarSize;
               final ratioY = (dy / dh1);
-              print('Document Height: $dh1');
-              print('Document Width: ${size.width}');
-              print('Vertical Gray Space: $vgs');
-              print('Ration y (%): $ratioY');
+              // print('Document Height: $dh1');
+              // print('Document Width: ${size.width}');
+              // print('Vertical Gray Space: $vgs');
+              // print('Ration y (%): $ratioY');
               final newDy =
                   ((bodyHeight - noteDetailContainerHeight) * ratioY) +
                       appbarSize;
@@ -204,11 +214,11 @@ class _PdfViewPageState extends State<PdfViewPage>
               final dw = dh2 * 0.77;
               final hgs = (size.width - dw) / 2;
               final ratioX = (newNote.offset.dx / size.width);
-              print('Document Height 2: $dh2');
-              print('Document Width 2: $dw');
-              print('size.width: ${size.width}');
-              print('Horizontal Gray Space: $hgs');
-              print('Ration y (%): $ratioX');
+              // print('Document Height 2: $dh2');
+              // print('Document Width 2: $dw');
+              // print('size.width: ${size.width}');
+              // print('Horizontal Gray Space: $hgs');
+              // print('Ration y (%): $ratioX');
               final newDx = hgs + (dw * ratioX);
 
               final startingDy = newNote.offset.dy;
@@ -216,8 +226,8 @@ class _PdfViewPageState extends State<PdfViewPage>
 
               return Transform(
                 transform: Matrix4.translationValues(
-                  animation.value * (newDx - startingDx),
-                  animation.value * (newDy - startingDy),
+                  animation.value * (newDx - startingDx + 8),
+                  animation.value * (newDy - startingDy + 8),
                   0.0,
                 ),
                 child: CircleAvatar(
@@ -255,7 +265,7 @@ class PdfViewWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (cubit.state.isSelectedNote) {
-          cubit.onDismissNoteDetail();
+          cubit.onDismissNoteDetail(context);
           controller.animateBack(0);
         }
       },
@@ -263,6 +273,9 @@ class PdfViewWidget extends StatelessWidget {
         documentLoader: const Center(child: CircularProgressIndicator()),
         pageLoader: const Center(child: CircularProgressIndicator()),
         controller: pdfController,
+        physics: cubit.state.isSelectedNote
+            ? const NeverScrollableScrollPhysics()
+            : null,
         pageSnapping: true,
         scrollDirection: Axis.vertical,
         onPageChanged: (page) => cubit.onPageChanged(context, page),
@@ -274,12 +287,14 @@ class PdfViewWidget extends StatelessWidget {
 class _AddNoteFormBottomSheet extends HookWidget {
   final LongPressStartDetails details;
   final VoidCallback onAddPressed;
+  final VoidCallback onCancelPressed;
   final ValueChanged<String> onNoteTextChanged;
 
   const _AddNoteFormBottomSheet({
     Key? key,
     required this.details,
     required this.onAddPressed,
+    required this.onCancelPressed,
     required this.onNoteTextChanged,
   }) : super(key: key);
 
@@ -301,9 +316,11 @@ class _AddNoteFormBottomSheet extends HookWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  child: const Text('Cancel'),
-                  onPressed: () => _close(context),
-                ),
+                    child: const Text('Cancel'),
+                    onPressed: () {
+                      _close(context);
+                      onCancelPressed();
+                    }),
                 const Text('Add a note'),
                 TextButton(
                   child: const Text('Add'),
@@ -337,6 +354,10 @@ class _NoteDetailContainer extends StatelessWidget {
   final String? noteText;
   final VoidCallback onDeletePressed;
   final VoidCallback onEditPressed;
+  final VoidCallback onNavigateForward;
+  final VoidCallback onNavigateBack;
+  final bool isForwardEnable;
+  final bool isBackwardEnable;
 
   final double noteDisplacement;
   const _NoteDetailContainer({
@@ -344,6 +365,10 @@ class _NoteDetailContainer extends StatelessWidget {
     this.noteText,
     required this.onDeletePressed,
     required this.onEditPressed,
+    required this.onNavigateForward,
+    required this.onNavigateBack,
+    required this.isForwardEnable,
+    required this.isBackwardEnable,
     required this.noteDisplacement,
   }) : super(key: key);
 
@@ -356,23 +381,22 @@ class _NoteDetailContainer extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       height: noteDisplacement,
       width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(noteText ?? ''),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Today',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
+          Container(
+            height: 180,
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(noteText ?? ''),
+                const SizedBox(height: 10),
+                const Text(
+                  'Today',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
             ),
           ),
           const Divider(
@@ -381,6 +405,7 @@ class _NoteDetailContainer extends StatelessWidget {
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextButton(
                 onPressed: () {},
@@ -408,12 +433,14 @@ class _NoteDetailContainer extends StatelessWidget {
                 width: 120,
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios),
-                onPressed: () {},
+                icon: Icon(Icons.arrow_back_ios,
+                    color: isBackwardEnable ? Colors.red : Colors.grey),
+                onPressed: isBackwardEnable ? onNavigateBack : null,
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_forward_ios),
-                onPressed: () {},
+                icon: Icon(Icons.arrow_forward_ios,
+                    color: isForwardEnable ? Colors.red : Colors.grey),
+                onPressed: isForwardEnable ? onNavigateForward : null,
               ),
             ],
           ),
